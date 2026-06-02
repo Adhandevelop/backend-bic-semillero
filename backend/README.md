@@ -7,6 +7,7 @@ API REST construida con Django y Django REST Framework para gestionar buses, con
 - Python 3.10 o superior
 - pip
 - Entorno virtual recomendado
+- PostgreSQL/PostGIS disponible en Docker
 
 ## Instalacion Rapida
 
@@ -14,6 +15,8 @@ API REST construida con Django y Django REST Framework para gestionar buses, con
 python -m venv .venv
 .venv\Scripts\activate
 pip install -r requirements.txt
+copy .env.example .env
+python manage.py check
 python manage.py makemigrations
 python manage.py migrate
 python manage.py createsuperuser
@@ -24,11 +27,38 @@ La API queda disponible en `http://127.0.0.1:8000/api/`.
 
 ## Configuracion
 
-La configuracion actual usa SQLite por defecto para facilitar pruebas locales. CORS permite solicitudes desde:
+El backend carga variables desde `.env` usando `python-dotenv`. El archivo `.env` no debe subirse al repositorio; usa `.env.example` como plantilla.
+
+```env
+SECRET_KEY=change-me
+DEBUG=True
+ALLOWED_HOSTS=127.0.0.1,localhost
+CORS_ALLOWED_ORIGINS=http://localhost:4200
+
+DB_NAME=semillero_transporte
+DB_USER=semillero_user
+DB_PASSWORD=tu_password
+DB_HOST=127.0.0.1
+DB_PORT=5431
+
+# Opcional si el servidor requiere rutas explicitas:
+GDAL_LIBRARY_PATH=
+GEOS_LIBRARY_PATH=
+```
+
+La base de datos usa el backend PostGIS de Django:
+
+```text
+django.contrib.gis.db.backends.postgis
+```
+
+CORS permite solicitudes desde:
 
 ```text
 http://localhost:4200
 ```
+
+GeoDjango con PostGIS requiere que las librerias nativas GDAL/GEOS esten instaladas en el sistema o disponibles dentro del contenedor/servidor. Si Django no las detecta automaticamente, define `GDAL_LIBRARY_PATH` y `GEOS_LIBRARY_PATH` en `.env`.
 
 ## Modelos
 

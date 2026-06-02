@@ -2,35 +2,48 @@
 Django settings for the Sistema de Gestion de Transporte backend.
 """
 
-from pathlib import Path
 import os
+from pathlib import Path
+
 from dotenv import load_dotenv
+
 
 BASE_DIR = Path(__file__).resolve().parent.parent
 
 # Cargar variables del archivo .env
 load_dotenv(BASE_DIR / ".env")
 
+if os.getenv("GDAL_LIBRARY_PATH"):
+    os.environ["GDAL_LIBRARY_PATH"] = os.getenv("GDAL_LIBRARY_PATH")
+
+if os.getenv("GEOS_LIBRARY_PATH"):
+    os.environ["GEOS_LIBRARY_PATH"] = os.getenv("GEOS_LIBRARY_PATH")
+
+GDAL_LIBRARY_PATH = os.getenv("GDAL_LIBRARY_PATH") or None
+GEOS_LIBRARY_PATH = os.getenv("GEOS_LIBRARY_PATH") or None
+
+
+def env_list(name, default=""):
+    value = os.getenv(name, default)
+    return [item.strip() for item in value.split(",") if item.strip()]
+
+
 SECRET_KEY = os.getenv("SECRET_KEY", "cambia_esta_clave")
 
-DEBUG = os.getenv("DEBUG", "False") == "True"
+DEBUG = os.getenv("DEBUG", "False").lower() in {"1", "true", "yes", "on"}
 
-ALLOWED_HOSTS = os.getenv(
-    "ALLOWED_HOSTS",
-    "localhost,127.0.0.1"
-).split(",")
+ALLOWED_HOSTS = env_list("ALLOWED_HOSTS", "localhost,127.0.0.1")
 
 INSTALLED_APPS = [
     "django.contrib.admin",
     "django.contrib.auth",
     "django.contrib.contenttypes",
+    "django.contrib.gis",
     "django.contrib.sessions",
     "django.contrib.messages",
     "django.contrib.staticfiles",
-
     "corsheaders",
     "rest_framework",
-
     "transporte",
 ]
 
@@ -67,11 +80,11 @@ WSGI_APPLICATION = "backend.wsgi.application"
 DATABASES = {
     "default": {
         "ENGINE": "django.contrib.gis.db.backends.postgis",
-        "NAME": os.getenv("DB_NAME"),
-        "USER": os.getenv("DB_USER"),
-        "PASSWORD": os.getenv("DB_PASSWORD"),
-        "HOST": os.getenv("DB_HOST"),
-        "PORT": os.getenv("DB_PORT"),
+        "NAME": os.getenv("DB_NAME", "semillero_transporte"),
+        "USER": os.getenv("DB_USER", "semillero_user"),
+        "PASSWORD": os.getenv("DB_PASSWORD", ""),
+        "HOST": os.getenv("DB_HOST", "127.0.0.1"),
+        "PORT": os.getenv("DB_PORT", "5431"),
     }
 }
 
@@ -104,10 +117,7 @@ STATIC_ROOT = BASE_DIR / "staticfiles"
 
 DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
 
-CORS_ALLOWED_ORIGINS = os.getenv(
-    "CORS_ALLOWED_ORIGINS",
-    "http://localhost:4200"
-).split(",")
+CORS_ALLOWED_ORIGINS = env_list("CORS_ALLOWED_ORIGINS", "http://localhost:4200")
 
 REST_FRAMEWORK = {
     "DEFAULT_PERMISSION_CLASSES": [

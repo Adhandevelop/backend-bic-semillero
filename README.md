@@ -23,7 +23,7 @@ Backend academico desarrollado con Django y Django REST Framework para administr
 - Validaciones de negocio desde serializers.
 - Panel administrativo de Django con todos los modelos registrados.
 - CORS configurado para integracion con Angular en `http://localhost:4200`.
-- Base de datos SQLite por defecto para facilitar pruebas locales.
+- Base de datos PostgreSQL/PostGIS configurada mediante variables de entorno.
 
 ## Tecnologias
 
@@ -32,7 +32,9 @@ Backend academico desarrollado con Django y Django REST Framework para administr
 | Django | Framework principal del backend |
 | Django REST Framework | Construccion de la API REST |
 | django-cors-headers | Configuracion CORS para Angular |
-| SQLite | Base de datos local por defecto |
+| python-dotenv | Carga de variables desde `.env` |
+| PostgreSQL/PostGIS | Base de datos del proyecto |
+| GDAL/GEOS | Librerias nativas requeridas por GeoDjango/PostGIS |
 
 ## Estructura del Proyecto
 
@@ -40,6 +42,7 @@ Backend academico desarrollado con Django y Django REST Framework para administr
 backend/
 |-- manage.py
 |-- requirements.txt
+|-- .env.example
 |-- README.md
 |-- backend/
 |   |-- settings.py
@@ -90,14 +93,46 @@ source .venv/bin/activate
 pip install -r requirements.txt
 ```
 
-4. Crear migraciones y aplicar la base de datos:
+4. Crear el archivo `.env` desde la plantilla:
 
 ```bash
+copy .env.example .env
+```
+
+En macOS o Linux:
+
+```bash
+cp .env.example .env
+```
+
+5. Configurar `.env` con los datos de PostgreSQL/PostGIS:
+
+```env
+SECRET_KEY=change-me
+DEBUG=True
+ALLOWED_HOSTS=127.0.0.1,localhost
+CORS_ALLOWED_ORIGINS=http://localhost:4200
+
+DB_NAME=semillero_transporte
+DB_USER=semillero_user
+DB_PASSWORD=tu_password
+DB_HOST=127.0.0.1
+DB_PORT=5431
+
+# Opcional si el servidor requiere rutas explicitas:
+GDAL_LIBRARY_PATH=
+GEOS_LIBRARY_PATH=
+```
+
+6. Verificar configuracion, crear migraciones y aplicar la base de datos:
+
+```bash
+python manage.py check
 python manage.py makemigrations
 python manage.py migrate
 ```
 
-5. Crear un superusuario:
+7. Crear un superusuario:
 
 ```bash
 python manage.py createsuperuser
@@ -115,6 +150,24 @@ Servicios disponibles:
 | --- | --- |
 | API REST | `http://127.0.0.1:8000/api/` |
 | Admin Django | `http://127.0.0.1:8000/admin/` |
+
+## Variables de Entorno
+
+| Variable | Descripcion | Ejemplo |
+| --- | --- | --- |
+| `SECRET_KEY` | Clave secreta de Django | `change-me` |
+| `DEBUG` | Activa modo desarrollo | `True` |
+| `ALLOWED_HOSTS` | Hosts permitidos separados por coma | `127.0.0.1,localhost` |
+| `CORS_ALLOWED_ORIGINS` | Origenes CORS separados por coma | `http://localhost:4200` |
+| `DB_NAME` | Nombre de la base de datos | `semillero_transporte` |
+| `DB_USER` | Usuario de PostgreSQL | `semillero_user` |
+| `DB_PASSWORD` | Password del usuario de base de datos | `tu_password` |
+| `DB_HOST` | Host de PostgreSQL/PostGIS | `127.0.0.1` |
+| `DB_PORT` | Puerto de PostgreSQL/PostGIS | `5431` |
+| `GDAL_LIBRARY_PATH` | Ruta opcional a la libreria GDAL | vacio si el sistema ya la encuentra |
+| `GEOS_LIBRARY_PATH` | Ruta opcional a la libreria GEOS | vacio si el sistema ya la encuentra |
+
+> Nota: GeoDjango con PostGIS requiere las librerias nativas GDAL/GEOS instaladas en el sistema o disponibles dentro del contenedor/servidor.
 
 ## Endpoints
 
