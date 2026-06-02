@@ -32,8 +32,8 @@ El backend carga variables desde `.env` usando `python-dotenv`. El archivo `.env
 ```env
 SECRET_KEY=change-me
 DEBUG=True
-ALLOWED_HOSTS=127.0.0.1,localhost
-CORS_ALLOWED_ORIGINS=http://localhost:4200
+ALLOWED_HOSTS=127.0.0.1,localhost,72.60.175.200
+CORS_ALLOWED_ORIGINS=http://localhost:4200,http://72.60.175.200,http://72.60.175.200:4200
 
 DB_NAME=semillero_transporte
 DB_USER=semillero_user
@@ -58,6 +58,13 @@ CORS permite solicitudes desde:
 http://localhost:4200
 ```
 
+Tambien se permite el frontend desplegado en:
+
+```text
+http://72.60.175.200
+http://72.60.175.200:4200
+```
+
 GeoDjango con PostGIS requiere que las librerias nativas GDAL/GEOS esten instaladas en el sistema o disponibles dentro del contenedor/servidor. Si Django no las detecta automaticamente, define `GDAL_LIBRARY_PATH` y `GEOS_LIBRARY_PATH` en `.env`.
 
 ## Modelos
@@ -70,6 +77,36 @@ GeoDjango con PostGIS requiere que las librerias nativas GDAL/GEOS esten instala
 | Viaje | `bus`, `conductor`, `ruta`, `fecha_hora_inicio`, `fecha_hora_fin`, `estado` |
 
 ## Endpoints
+
+### Autenticacion JWT
+
+```text
+POST /api/token/
+POST /api/token/refresh/
+```
+
+Login:
+
+```bash
+curl -X POST http://72.60.175.200/api/token/ \
+  -H "Content-Type: application/json" \
+  -d '{"username":"admin","password":"TU_PASSWORD"}'
+```
+
+La respuesta contiene:
+
+```json
+{
+  "access": "token_access",
+  "refresh": "token_refresh"
+}
+```
+
+Enviar el access token en las peticiones protegidas:
+
+```text
+Authorization: Bearer token_access
+```
 
 | Recurso | Endpoint |
 | --- | --- |

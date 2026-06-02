@@ -1,5 +1,6 @@
 from datetime import timedelta
 
+from django.contrib.auth.models import User
 from django.urls import reverse
 from django.utils import timezone
 from rest_framework import status
@@ -10,6 +11,11 @@ from .models import Bus, Conductor, Ruta, Viaje
 
 class TransporteAPITests(APITestCase):
     def setUp(self):
+        self.user = User.objects.create_user(
+            username="admin",
+            password="admin-pass-123",
+        )
+        self.client.force_authenticate(user=self.user)
         self.bus = Bus.objects.create(placa="abc123", capacidad=40, modelo="2024")
         self.conductor = Conductor.objects.create(
             nombre="Juan Perez",
@@ -21,6 +27,19 @@ class TransporteAPITests(APITestCase):
             destino="Medellin",
             distancia_km=415,
         )
+
+    def test_token_endpoint_devuelve_access_y_refresh(self):
+        self.client.force_authenticate(user=None)
+
+        response = self.client.post(
+            reverse("token_obtain_pair"),
+            {"username": "admin", "password": "admin-pass-123"},
+            format="json",
+        )
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertIn("access", response.data)
+        self.assertIn("refresh", response.data)
 
     def test_crear_bus_guarda_placa_en_mayuscula(self):
         response = self.client.post(

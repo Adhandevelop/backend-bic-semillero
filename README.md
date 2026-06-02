@@ -20,6 +20,7 @@ Backend academico desarrollado con Django y Django REST Framework para administr
 - Rutas generadas automaticamente con routers de Django REST Framework.
 - Endpoints adicionales para filtrar recursos activos y viajes por estado.
 - Acciones personalizadas para iniciar, finalizar y cancelar viajes.
+- Autenticacion JWT para proteger la API y consumirla desde Angular.
 - Validaciones de negocio desde serializers.
 - Panel administrativo de Django con todos los modelos registrados.
 - CORS configurado para integracion con Angular en `http://localhost:4200`.
@@ -31,6 +32,7 @@ Backend academico desarrollado con Django y Django REST Framework para administr
 | --- | --- |
 | Django | Framework principal del backend |
 | Django REST Framework | Construccion de la API REST |
+| Simple JWT | Autenticacion con access y refresh tokens |
 | django-cors-headers | Configuracion CORS para Angular |
 | python-dotenv | Carga de variables desde `.env` |
 | PostgreSQL/PostGIS | Base de datos del proyecto |
@@ -111,7 +113,7 @@ cp .env.example .env
 SECRET_KEY=change-me
 DEBUG=True
 ALLOWED_HOSTS=127.0.0.1,localhost
-CORS_ALLOWED_ORIGINS=http://localhost:4200
+CORS_ALLOWED_ORIGINS=http://localhost:4200,http://72.60.175.200,http://72.60.175.200:4200
 
 DB_NAME=semillero_transporte
 DB_USER=semillero_user
@@ -157,8 +159,8 @@ Servicios disponibles:
 | --- | --- | --- |
 | `SECRET_KEY` | Clave secreta de Django | `change-me` |
 | `DEBUG` | Activa modo desarrollo | `True` |
-| `ALLOWED_HOSTS` | Hosts permitidos separados por coma | `127.0.0.1,localhost` |
-| `CORS_ALLOWED_ORIGINS` | Origenes CORS separados por coma | `http://localhost:4200` |
+| `ALLOWED_HOSTS` | Hosts permitidos separados por coma | `127.0.0.1,localhost,72.60.175.200` |
+| `CORS_ALLOWED_ORIGINS` | Origenes CORS separados por coma | `http://localhost:4200,http://72.60.175.200,http://72.60.175.200:4200` |
 | `DB_NAME` | Nombre de la base de datos | `semillero_transporte` |
 | `DB_USER` | Usuario de PostgreSQL | `semillero_user` |
 | `DB_PASSWORD` | Password del usuario de base de datos | `tu_password` |
@@ -170,6 +172,36 @@ Servicios disponibles:
 > Nota: GeoDjango con PostGIS requiere las librerias nativas GDAL/GEOS instaladas en el sistema o disponibles dentro del contenedor/servidor.
 
 ## Endpoints
+
+### Autenticacion
+
+| Metodo | Endpoint | Descripcion |
+| --- | --- | --- |
+| POST | `/api/token/` | Obtiene `access` y `refresh` con usuario y password |
+| POST | `/api/token/refresh/` | Genera un nuevo `access` con el refresh token |
+
+Ejemplo de login:
+
+```bash
+curl -X POST http://72.60.175.200/api/token/ \
+  -H "Content-Type: application/json" \
+  -d '{"username":"admin","password":"TU_PASSWORD"}'
+```
+
+Respuesta esperada:
+
+```json
+{
+  "access": "token_access",
+  "refresh": "token_refresh"
+}
+```
+
+Para consumir la API, Angular debe enviar el token en cada peticion protegida:
+
+```text
+Authorization: Bearer token_access
+```
 
 ### CRUD principal
 
@@ -185,6 +217,8 @@ Cada recurso principal soporta:
 ```text
 GET, POST, GET /{id}/, PUT, PATCH, DELETE
 ```
+
+Los endpoints de buses, conductores, rutas y viajes requieren autenticacion JWT.
 
 ### Consultas adicionales
 
